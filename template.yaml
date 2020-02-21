@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  movie-app
+
+  Sample SAM Template for movie-app
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: false # sets for all methods
+  APILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSLambdaFullAccess
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+                - "edgelambda.amazonaws.com"
+      Policies:
+
+        - PolicyName: LambdaDynamoDBPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - "dynamodb:Get*"
+                  - "dynamodb:Describe*"
+                  - "dynamodb:Put*"
+                  - "dynamodb:Scan*"
+                Effect: Allow
+                Resource: ['*']
+        - PolicyName: LambdaFunctionRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - "cloudwatch:*"
+                  - "s3:Get*"
+                  - "kms:Decrypt"
+                Effect: Allow
+                Resource: ['*']
+  BackendLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello_world/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Role: !GetAtt APILambdaRole.Arn
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /{proxy+}
+            Method: ANY
+      Environment:
+        Variables:
+            REGION: 'us-east-1'
+            ENV: 'prod'
+            LOGLEVEL: 'debug'
+            TABLENAME: ''
+
+Outputs:
+  HelloWorldFunction:
+    Description: "Movie Lambda Function ARN"
+    Value: !GetAtt BackendLambdaHandler.Arn
