@@ -64,7 +64,7 @@ def movie_search():
 def get_watch_list(user_id):
     result = db_file.get_watch_list(user_id)
     print(result)
-    return jsonify(result)
+    return create_response(result, 200)
 
 
 @application.route('/movie/add/watchlist', methods=['POST'])
@@ -75,7 +75,7 @@ def add_watch_list():
     movie_name = str(request_data['movie_name'])
     rating = str(request_data['rating'])
     db_file.add_watch_list(user_id, movie_id, movie_name, rating)
-    return jsonify(message='Movie Added to WatchList')
+    return create_response('Movie Added to WatchList', 200)
 
 
 @application.route('/movie/delete/watchlist', methods=['POST'])
@@ -84,7 +84,26 @@ def delete_watch_list():
     user_id = str(request_data['user_id'])
     movie_id = str(request_data['movie_id'])
     db_file.delete_watch_list(user_id, movie_id)
-    return jsonify(message='Movie Deleted from WatchList')
+    return create_response('Movie Deleted from WatchList', 200)
+
+
+def create_response(message, status_code):
+    """
+    :param message:
+    :param status_code:
+    :return: """
+    return_res = jsonify(status=str(status_code),
+                          message=json.dump(message)
+                        )
+    return add_required_headers(make_response(return_res)), int(status_code)
+
+
+
+def add_required_headers(response):
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
 
 
 if __name__ == '__main__':

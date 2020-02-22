@@ -81,9 +81,9 @@ Resources:
             REGION: 'us-east-1'
             ENV: 'prod'
             LOGLEVEL: 'debug'
-            TABLENAME: ''
+            TABLENAME: 'watch_list'
 
 Outputs:
-  HelloWorldFunction:
+  ServerlessFunction:
     Description: "Movie Lambda Function ARN"
     Value: !GetAtt BackendLambdaHandler.Arn
