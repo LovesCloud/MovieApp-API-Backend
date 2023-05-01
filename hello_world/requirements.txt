@@ -1,6 +1,6 @@
 requests
 aws-wsgi
-flask==1.0.2
+flask==2.3.2
 websocket-client==0.56.0
 Werkzeug==0.15.5
 flask-cors
